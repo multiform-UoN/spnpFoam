@@ -1,0 +1,134 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Calculates the normal gradient of fields at chosen patches of fluid region.
+
+\*---------------------------------------------------------------------------*/
+functionObjectLibs            ("libutilityFunctionObjects.so");
+
+type                coded;
+
+name                PostVolIntIonFluxes;
+
+region              fluid;
+executeControl      runTime;
+executeInterval     0.01;
+writeControl        runTime;
+writeInterval       0.01;
+
+
+codeExecute
+#{
+
+    // Look up fields in fluid mesh registery
+    const volScalarField& fluidV = mesh().lookupObject<volScalarField>("V");
+	  const volScalarField& fluidCCl = mesh().lookupObject<volScalarField>("C.Cl");
+    const volScalarField& fluidCNa = mesh().lookupObject<volScalarField>("C.Na");
+    const volScalarField& fluidT = mesh().lookupObject<volScalarField>("T");
+    const volVectorField& fluidU = mesh().lookupObject<volVectorField>("U");
+
+    // Easier to hardcode the diffusion coeffs and charge numbers than lookup from dict
+    const dimensionedScalar D_CCl("D_CCl",dimensionSet(0,2,-1,0,0,0,0),1.334e-9);
+    const scalar Z_CCl(-1);
+    const dimensionedScalar D_CNa("D_CNa",dimensionSet(0,2,-1,0,0,0,0),2.032e-9);
+    const scalar Z_CNa(1);
+
+    // Again, tried including electrokineticConstants.H to add universal constants k_, e_. 
+    // Didn't work, hardcoded instead
+    const dimensionedScalar e_
+    (
+            "elementaryCharge",
+            dimensionSet( 0, 0, 1, 0, 0, 1, 0 ),
+            1.6021766208e-19
+    );
+
+    const dimensionedScalar k_
+    (
+            "BoltzmannConstant",
+            dimensionSet( 1, 2, -2, -1, 0, 0, 0 ),
+            1.38064852e-23
+    );
+
+    // Compute the ionic (Nernst-Planck) flux per species
+    volVectorField CCl_NP(fluidU*fluidCCl - fluidCCl*e_*fvc::grad(fluidV)/(k_*fluidT)*D_CCl*Z_CCl -D_CCl*fvc::grad(fluidCCl));
+    volVectorField CNa_NP(fluidU*fluidCNa - fluidCNa*e_*fvc::grad(fluidV)/(k_*fluidT)*D_CNa*Z_CNa -D_CNa*fvc::grad(fluidCNa));
+
+    // Compute ion advective fluxes
+    const volVectorField CCl_AdvFlux(fluidU*fluidCCl);
+    const volVectorField CNa_AdvFlux(fluidU*fluidCNa);
+    // Compute ion diffusive fluxes
+    const volVectorField CCl_DifFlux(-D_CCl*fvc::grad(fluidCCl)*fluidCCl);
+    const volVectorField CNa_DifFlux(-D_CNa*fvc::grad(fluidCNa)*fluidCNa);
+    // Compute ion electrical fluxes
+    const volVectorField CCl_EleFlux(-fluidCCl*e_*fvc::grad(fluidV)/(k_*fluidT)*D_CCl*Z_CCl);
+    const volVectorField CNa_EleFlux(-fluidCNa*e_*fvc::grad(fluidV)/(k_*fluidT)*D_CNa*Z_CNa);
+
+    // Compute Total fluid volume
+    const scalar fluidVol(Foam::gSum(mesh().V()));
+
+    // Compute volume averaged x & z components of fluxes
+    const scalar volAvgCCl_AdvFlux_X(fvc::domainIntegrate(CCl_AdvFlux.component(vector::X)).value()/fluidVol);
+    const scalar volAvgCCl_AdvFlux_Z(fvc::domainIntegrate(CCl_AdvFlux.component(vector::Z)).value()/fluidVol);
+    const scalar volAvgCNa_AdvFlux_X(fvc::domainIntegrate(CNa_AdvFlux.component(vector::X)).value()/fluidVol);
+    const scalar volAvgCNa_AdvFlux_Z(fvc::domainIntegrate(CNa_AdvFlux.component(vector::Z)).value()/fluidVol);
+    const scalar volAvgCCl_DifFlux_X(fvc::domainIntegrate(CCl_DifFlux.component(vector::X)).value()/fluidVol);
+    const scalar volAvgCCl_DifFlux_Z(fvc::domainIntegrate(CCl_DifFlux.component(vector::Z)).value()/fluidVol);
+    const scalar volAvgCNa_DifFlux_X(fvc::domainIntegrate(CNa_DifFlux.component(vector::X)).value()/fluidVol);
+    const scalar volAvgCNa_DifFlux_Z(fvc::domainIntegrate(CNa_DifFlux.component(vector::Z)).value()/fluidVol);
+    const scalar volAvgCCl_EleFlux_X(fvc::domainIntegrate(CCl_EleFlux.component(vector::X)).value()/fluidVol);
+    const scalar volAvgCCl_EleFlux_Z(fvc::domainIntegrate(CCl_EleFlux.component(vector::Z)).value()/fluidVol);
+    const scalar volAvgCNa_EleFlux_X(fvc::domainIntegrate(CNa_EleFlux.component(vector::X)).value()/fluidVol);
+    const scalar volAvgCNa_EleFlux_Z(fvc::domainIntegrate(CNa_EleFlux.component(vector::Z)).value()/fluidVol);
+
+    // Output volume averages and time to terminal (or redirected to a log file, i.e pnpMultiFoam > out.log, if chosen)
+    Info<<"Time: "<<mesh().time().timeName()<<endl;
+    Info<<"Post-process: volAvgCCl_AdvFlux_X\t"<<volAvgCCl_AdvFlux_X<<endl;
+    Info<<"Post-process: volAvgCCl_AdvFlux_Z\t"<<volAvgCCl_AdvFlux_Z<<endl;
+    Info<<"Post-process: volAvgCNa_AdvFlux_X\t"<<volAvgCNa_AdvFlux_X<<endl;
+    Info<<"Post-process: volAvgCNa_AdvFlux_Z\t"<<volAvgCNa_AdvFlux_Z<<endl;
+    Info<<"Post-process: volAvgCCl_DifFlux_X\t"<<volAvgCCl_DifFlux_X<<endl;
+    Info<<"Post-process: volAvgCCl_DifFlux_Z\t"<<volAvgCCl_DifFlux_Z<<endl;
+    Info<<"Post-process: volAvgCNa_DifFlux_X\t"<<volAvgCNa_DifFlux_X<<endl;
+    Info<<"Post-process: volAvgCNa_DifFlux_Z\t"<<volAvgCNa_DifFlux_Z<<endl;
+    Info<<"Post-process: volAvgCCl_EleFlux_X\t"<<volAvgCCl_EleFlux_X<<endl;
+    Info<<"Post-process: volAvgCCl_EleFlux_Z\t"<<volAvgCCl_EleFlux_Z<<endl;
+    Info<<"Post-process: volAvgCNa_EleFlux_X\t"<<volAvgCNa_EleFlux_X<<endl;
+    Info<<"Post-process: volAvgCNa_EleFlux_Z\t"<<volAvgCNa_EleFlux_Z<<endl;
+    
+    //Check if master process(or) (Automatically satisfied if non-parallel processing)
+
+      // if(Pstream::master()){
+
+      //   fileName Output_Dir = "./postProcessing/volAvgIonFluxes/"; //mesh().time().timeName()
+      //   OFstream out(Output_Dir/"volAvgIonFluxes.dat");
+      //   autoPtr<std::ofstream> file;
+
+      //   if(!out.good()){ //Check if directory & file exists
+      //     Info<< "Creating postProcessing/volAvgIonFluxes/ directory: " <<endl;
+      //     mkDir(Output_Dir);
+      //     //Reset file to a new ofstream
+      //     file.reset(new std::ofstream(Output_Dir/"volAvgIonFluxes.dat"));
+      //     // Write header line of file  
+      //     file() <<"time\tvolAvgCCl_AdvFlux_X\tvolAvgCCl_AdvFlux_Z\tvolAvgCNa_AdvFlux_X\tvolAvgCNa_AdvFlux_Z"
+      //            <<"\tvolAvgCCl_DifFlux_X\tvolAvgCCl_DifFlux_Z\tvolAvgCNa_DifFlux_X\tvolAvgCNa_DifFlux_Z"
+      //            <<"\tvolAvgCCl_EleFlux_X\tvolAvgCCl_EleFlux_Z\tvolAvgCNa_EleFlux_X\tvolAvgCNa_EleFlux_Z\n";
+      //   }
+      //   //Reset file to new ofstream that appends to Average_Surf_Concen.dat
+      //   file.reset(new std::ofstream(Output_Dir/"volAvgIonFluxes.dat", std::ios::out | std::ios::app));
+          
+      //     //Output surface average concentrations
+      //     //forAll(ref,face_ID){
+      //     file() << mesh().time().timeName() <<"\t"<<volAvgCCl_AdvFlux_X<<"\t"<<volAvgCCl_AdvFlux_Z<<"\t"<<volAvgCNa_AdvFlux_X
+      //            <<"\t"<<volAvgCNa_AdvFlux_Z<<"\t"<<volAvgCCl_DifFlux_X<<"\t"<<volAvgCCl_DifFlux_Z<<"\t"<<volAvgCNa_DifFlux_X
+      //            <<"\t"<<volAvgCNa_DifFlux_Z<<"\t"<<volAvgCCl_EleFlux_X<<"\t"<<volAvgCCl_EleFlux_Z<<"\t"<<volAvgCNa_EleFlux_X
+      //            <<"\t"<<volAvgCNa_EleFlux_Z<<endl;
+      //     //}
+      //     file().close();
+      // }
+
+#};

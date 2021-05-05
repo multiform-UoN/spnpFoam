@@ -1,0 +1,23 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Calculates the volume integral of concentrations across the fluid
+
+    IMPORTANT: Must compute rho = VolInt(C.Cl)*z_{cl} + VolInt(C.Na)*z_{na} 
+                elsewhere to get charge density rho 
+\*---------------------------------------------------------------------------*/
+
+type        volFieldValue;
+libs        ("libfieldFunctionObjects.so");
+
+fields      (C.Cl C.Na);
+operation   volIntegrate;
+regionType  all;
+region      fluid;
+writeFields no;
+

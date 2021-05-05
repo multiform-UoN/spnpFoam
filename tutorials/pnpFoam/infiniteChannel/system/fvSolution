@@ -1,0 +1,121 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    V
+    {
+        solver          PBiCGStab;
+        preconditioner  DIC;
+        smoother        DIC;
+        tolerance       1e-8;//1e-12;
+        relTol          1e-3;
+    }
+
+    U
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        smoother        DIC;
+        tolerance       1e-6;//1e-12;
+        relTol          0;
+    }
+
+    p
+    {
+        solver          GAMG;
+        smoother        GaussSeidel;//FDIC;
+        preconditioner  DIC;
+        tolerance       1e-06;
+        relTol          0.1;
+    }
+
+    VFinal
+    {
+        $V;
+        relTol          0;
+    }
+    UFinal
+    {
+        $U
+        relTol          0;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+
+    "C.*"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        smoother        DILU;
+        tolerance       1e-8;//1e-15;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+
+    nNonOrthogonalCorrectors 0;
+    nOuterCorrectors 50;
+    momentumPredictor off;
+    nCorrectors 3;
+    consistent yes;
+
+    outerCorrectorResidualControl
+    {
+       ".*" 
+        {
+            tolerance 1e-5;
+            relTol    1e-5;
+        }
+
+    }
+
+    pRefCell 0;
+    pRefValue 0;
+}
+
+SIMPLE
+{
+    $PIMPLE
+}
+
+relaxationFactors
+{
+	fields
+	{
+		C	1;//0.5;
+        p   1;
+        U   1;
+	}
+    equations
+    {
+//           "C.*"  0.99;//0.5;
+//        V     1;
+          U     0.9;
+    }
+}
+
+
+
+// ************************************************************************* //

@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      electrokineticProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+epsilonR  epsilonR [ 0 0 0 0 0 0 0 ] 40;//6e-13;
+
+mu        mu       [ 1 -1 -1 0 0 0 0 ] 10; // Dynamic viscosity
+
+electroNeutrality false;
+
+bodyForce 1;
+
+species
+(
+  //C.cations
+  //{
+  //   Z     Z [0 0 0 0 0 0 0]       1;
+  //   D     D [0 2 -1 0 0 0 0]  	  1e-6;
+  // }
+
+  C.anions
+  {
+    Z     Z [0 0 0 0 0 0 0]     1;//-1;
+    D     D [0 2 -1 0 0 0 0]   1e-12;
+  }
+);
+
+
+// ************************************************************************* //

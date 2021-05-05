@@ -1,0 +1,7 @@
+fvPatchFields/chemicalKinetics/reactionRates/newReactionRate.C
+fvPatchFields/chemicalKinetics/reactionRates/reactionRate.C
+fvPatchFields/chemicalKinetics/reactionRates/constant/constant.C
+fvPatchFields/chemicalKinetics/reactionRates/linear/linear.C
+fvPatchFields/chemicalKinetics/mappedChemicalKineticsSolidFvPatchScalarField.C
+fvPatchFields/chemicalKinetics/mappedChemicalKineticsFluidFvPatchScalarField.C
+LIB = $(FOAM_USER_LIBBIN)/libelectrokineticFoam

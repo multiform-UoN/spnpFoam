@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#blockMesh
+#setRandomField > logRandomField 
+#simpleDarcyFoam -noFunctionObjects
+#find ./ -name 'U' | while read U ; do cp "$U" ./0 ; done
+#echo "The velocity from the last time has been copied to 0 >>>>>  ./AllrunScalar 1e-7"
+
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# Create the mesh
+runApplication blockMesh
+
+# Create random field (p)
+setRandomField > logRandomField
+
+# Create solid cell set(s)
+runApplication topoSet
+
+runApplication transformPoints -scale  "(1e-3 1e-3 1e-3)"
+
+# Split mesh into solid and fluid regions, construct interface patches (fluid_to_solid, solid_to_fluid)
+runApplication splitMeshRegions -overwrite -cellZonesOnly #-defaultRegionName fluid -overwrite
+

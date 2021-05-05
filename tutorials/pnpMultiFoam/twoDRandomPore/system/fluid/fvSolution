@@ -1,0 +1,109 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system/fluid";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    V
+    {
+        solver          PBiCGStab;
+        preconditioner  FDIC;
+        smoother        FDIC;
+        tolerance       1e-8;//1e-12;
+        relTol          1e-3;
+    }
+
+    U
+    {
+        solver          PCG;
+        preconditioner  FDIC;
+        smoother        FDIC;
+        tolerance       1e-8;//1e-12;
+        relTol          1e-3;
+    }
+
+    p
+    {
+        solver          GAMG;
+        smoother        GaussSeidel;//FDIC;
+        preconditioner  FDIC;
+        tolerance       1e-8;
+        relTol          1e-3;
+    }
+
+    VFinal
+    {
+        $V;
+        relTol          0;
+    }
+    UFinal
+    {
+        $U
+        relTol          0;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+
+    "C.*"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        smoother        DILU;
+        tolerance       1e-8;//1e-15;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    outerCorrectorResidualControl //residualControl
+    {
+        ".*"
+        {
+            tolerance 1e-5;//1e-12
+            relTol    1e-3;
+        }
+
+    }
+    residualControl
+    {
+        ".*"   1e-8;//1e-12
+    }
+
+    // nOuterCorrectors 1;
+    nCorrectors     5;
+    nNonOrthogonalCorrectors 0;
+    //pRefLocation    0;
+    //pRefValue       0;
+    // VRefCell        0;
+    // VRefValue       0;
+}
+
+relaxationFactors
+{
+    equations
+    {
+        U .98;
+        V 1;
+    }
+}
+
+// ************************************************************************* //

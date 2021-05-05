@@ -1,0 +1,28 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+Tinitial        293;
+cFluid          2e-8;
+cSolid          8e-8;
+Uinitial        (0 0 0);
+V0              1;
+epsilonRSolid   1e4;
+epsilonRFluid   78.5;
+epsilon0        8.8541878176e-12;
+epsilonSolid    #calc "$epsilon0*$epsilonRSolid";
+epsilonFluid    #calc "$epsilon0*$epsilonRFluid";
+
+// ************************************************************************* //

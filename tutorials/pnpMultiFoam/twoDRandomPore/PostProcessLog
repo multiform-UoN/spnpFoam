@@ -1,0 +1,6 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Extract post-processing data rows and time, write to .dat file
+cat out.log | grep "Post-process" -B1 | cut -d' ' -f2- > volAvgFluxes.dat
+#cat Practice | grep "Foo" -B1 | cut -d' ' -f1- > OutPractice.dat

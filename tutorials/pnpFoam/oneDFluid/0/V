@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      V;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 2 -3 0 0 -1 0];
+
+internalField   #codeStream
+{
+    code
+    #{
+        // Access internal mesh
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
+
+        // Initialize constant coeff's/values
+        const scalar phi0 = 0.1; // Reference potential
+        const scalar PI = std::acos(-1); // pi constant
+        const scalar domLength = 1e-6; // domain length (x-cord)
+
+        // Initialize field for internalField to zero everywhere
+        scalarField alpha(mesh.nCells(),0.0);
+
+        // Run through all cell centers of internalField
+        forAll(alpha, i){
+
+            // Access cell center x-cord
+            const scalar& x = mesh.C()[i][0];
+
+            //Info<<"x == "<< x;
+
+            // Set internalField using cosine IC formulation
+            alpha[i] = phi0*(-std::cos(PI*x/domLength) + 1.0)/2.0;
+
+            //Info<<"  V == " << alpha[i] << endl;
+        };
+
+        // Construct actual dictionary entry
+        writeEntry(os,alpha);
+    #};
+
+    codeInclude
+    #{
+        #include "fvCFD.H"
+    #};
+
+    codeOptions
+    #{
+        -I$(LIB_SRC)/finiteVolume/lnInclude \
+        -I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs
+    #{
+        -lmeshTools \
+        -lfiniteVolume
+    #};
+
+};
+
+boundaryField
+{
+    anode
+    {
+        type            fixedValue;//fixedGradient;
+        value           uniform 0;
+        //gradient        1e3;
+    }
+
+    cathode
+    {
+        type            fixedValue;
+        value           uniform 0.1;
+    }
+
+    fixedWalls
+    {
+        type            empty;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

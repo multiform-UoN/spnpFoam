@@ -1,0 +1,117 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+tol 1e-16;
+conv 1e-10;
+
+solvers
+{
+    V
+    {
+        solver          PBiCGStab;
+        preconditioner  DIC;
+        smoother        DIC;
+        tolerance       $tol;
+        relTol          1e-3;
+    }
+
+    VFinal
+    {
+        $V;
+        relTol          0;
+    }
+
+    "C.*"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        smoother        DIC;
+        tolerance       $tol;
+        relTol          1e-3;
+    }
+
+    U
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        smoother        DIC;
+        tolerance       $tol;//1e-12;
+        relTol          0;
+    }
+
+    p
+    {
+        solver          GAMG;
+        smoother        GaussSeidel;//FDIC;
+        preconditioner  DIC;
+        tolerance       $tol;
+        relTol          0.1;
+    }
+
+    UFinal
+    {
+        $U
+        relTol          0;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+
+    nNonOrthogonalCorrectors 0;
+    nOuterCorrectors 10;
+
+    outerCorrectorResidualControl
+    {
+       ".*" 
+        {
+            tolerance $conv;
+            relTol    0;
+        }
+
+    }
+    residualControl
+    {
+        ".*"  $conv;
+    }
+}
+
+
+relaxationFactors
+{
+	fields
+	{
+        C	1;
+        p   1;
+        U   1;
+	}
+    equations
+    {
+       "C.*"  1;//0.5;
+        V     1;
+    }
+}
+
+
+
+// ************************************************************************* //
