@@ -1,0 +1,20 @@
+Seed1:
+-- Seed number      1450676319
+
+Seed2:
+-- Seed number      834273346
+
+setRandomFieldDict settings:
+
+correlation gaussian;
+Lcorr           (5e-5 5e-5 5e-5);
+corrTol         1e-8;
+nu              1;
+periodic true;
+mu             0;
+sigma          1;
+nterms 1;
+nfreq 30;
+maxLength (10 10 10);
+values (0 1);
+thresholds (-.5);

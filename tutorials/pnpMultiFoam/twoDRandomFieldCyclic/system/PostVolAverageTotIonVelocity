@@ -1,0 +1,49 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Calculates the normal gradient of fields at chosen patches of fluid region.
+
+\*---------------------------------------------------------------------------*/
+functionObjectLibs            ("libutilityFunctionObjects.so");
+
+type                coded;
+
+name                PostVolAverageTotIonVelocity;
+
+region              fluid;
+executeControl      timeStep;
+executeInterval     10;
+writeControl        timeStep;
+writeInterval       10;
+
+codeExecute
+#{
+
+    // Look up NP flux fields in fluid mesh registery for concentration fields
+    const surfaceScalarField& fluidPhiCNa = mesh().lookupObject<surfaceScalarField>("phiC.Na");
+    const surfaceScalarField& fluidPhiCCl = mesh().lookupObject<surfaceScalarField>("phiC.Cl");
+
+    // Reconstruct vector fields of total velocity for concentration fields
+    volVectorField UCNa(fvc::reconstruct(fluidPhiCNa));
+    volVectorField UCCl(fvc::reconstruct(fluidPhiCCl));
+
+    // Compute Total fluid volume
+    const scalar fluidVol(Foam::gSum(mesh().V()));
+
+    // Compute veloume average x & z components of total NP velocities
+    const scalar volAvgUCNa_X(fvc::domainIntegrate(UCNa.component(vector::X)).value()/fluidVol);
+    const scalar volAvgUCNa_Z(fvc::domainIntegrate(UCNa.component(vector::Z)).value()/fluidVol);
+    const scalar volAvgUCCl_X(fvc::domainIntegrate(UCCl.component(vector::X)).value()/fluidVol);
+    const scalar volAvgUCCl_Z(fvc::domainIntegrate(UCCl.component(vector::Z)).value()/fluidVol);
+
+    // Print results to terminal/log file
+    Info<<"Time: "<<mesh().time().timeName()<<endl;
+    Info<<"Post-process: volAvgUCNa (X Z) == \t"<<volAvgUCNa_X<<" "<<volAvgUCNa_Z<<endl;
+    Info<<"Post-process: volAvgUCCl (X Z) == \t"<<volAvgUCCl_X<<" "<<volAvgUCCl_Z<<endl;
+    
+#};

@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      V;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+#include "$FOAM_CASE/constant/initialConditions";
+
+dimensions      [1 2 -3 0 0 -1 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        type            cyclic;
+    }
+    outlet
+    {
+        type            cyclic;
+        value           uniform 0;
+    }
+    lowerWall
+    {
+        type            cyclic;
+    }
+    upperWall
+    {
+        type            cyclic;
+    }
+    emptyWall
+    {
+        type            empty;
+    }
+    fluid_to_solid
+    {
+        type            mappedContinuity;
+        Dnbr            uniform $epsilonSolid;
+        RobinF          uniform 0;
+        RobinK          uniform 0;
+        RobinD          uniform $epsilonFluid;
+        value           $internalField;
+    }
+
+    #includeEtc "caseDicts/setConstraintTypes"
+}
+
+
+// ************************************************************************* //

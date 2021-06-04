@@ -1,0 +1,21 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+Description
+    Calculates the volume average of fields across the fluid
+
+\*---------------------------------------------------------------------------*/
+
+type        volFieldValue;
+libs        ("libfieldFunctionObjects.so");
+
+fields      (C.Cl C.Na U);
+operation   volAverage;
+regionType  all;
+region      fluid;
+writeFields no;
+

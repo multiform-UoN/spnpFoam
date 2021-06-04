@@ -1,0 +1,101 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/initialConditions";
+
+#include "$FOAM_CASE/constant/D";
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField  #codeStream
+{
+    code
+    #{
+        // Access internal mesh
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
+
+        // Initialize field for internalField to zero everywhere
+        scalarField alpha(mesh.nCells(),0.0);
+
+        // Run through all cell centers of internalField
+        forAll(alpha, i){
+
+            // Access cell center x-cord
+            const scalar& x = mesh.C()[i][0];
+
+            // Set internalField using exponential formulation
+            alpha[i] = std::exp(-200*std::pow(x+0.5,2.0));
+
+            //Info<<"  V == " << alpha[i] << endl;
+        };
+        // Construct actual dictionary entry
+        writeEntry(os,alpha);
+    #};
+
+    codeInclude
+    #{
+        #include "fvCFD.H"
+    #};
+
+    codeOptions
+    #{
+        -I$(LIB_SRC)/finiteVolume/lnInclude \
+        -I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs
+    #{
+        -lmeshTools \
+        -lfiniteVolume
+    #};
+
+};
+
+boundaryField
+{
+
+    fluidOuterWall
+    {
+        type            fixedValue;//noFlux;//zeroGradient;
+        //inletValue      uniform $Tinitial;
+        value           uniform 1;//$Tinitial;
+    }
+
+    fluid_to_solid
+    {
+
+        type            mappedChemicalKineticsFluid;
+        RobinD          uniform $Dfluid;
+        Dsolid          uniform $Dsolid;
+        value           uniform 0;
+        field           "T";
+        localPhi        "phi";
+        mappedPhi       "phi";
+
+        reaction 
+        {
+            type            linear;
+            forward_rate    2;//0.5;
+            backward_rate   1;//0.0005;//0.001;//0.5;
+        }
+    }
+
+    #includeEtc "caseDicts/setConstraintTypes"
+}
+
+
+// ************************************************************************* //

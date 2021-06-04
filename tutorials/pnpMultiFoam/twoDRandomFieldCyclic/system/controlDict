@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | foam-extend: Open Source CFD                    |
+|  \\    /   O peration     | Version:     4.0                                |
+|   \\  /    A nd           | Web:         http://www.foam-extend.org         |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+libs            ("libmultiformFoam.so");
+
+application     pnpMultiFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         2;
+
+deltaT          5e-4;//5e-4;
+
+writeControl    runTime;//runTime;
+
+writeInterval   0.005;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+//adjustRunTime   yes;
+
+//maxCo           1.0;
+
+functions
+{
+    //#includeFunc PostSampleFluid
+    //#includeFunc PostSampleSolid
+    //#includeFunc PostVolIntIonFluxes
+    #includeFunc PostVolAverageTotIonVelocity
+    #includeFunc PostVolAverage
+}
+
+
+// ************************************************************************* //

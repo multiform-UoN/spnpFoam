@@ -1,0 +1,8 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # Run from this directory
+
+simRunList="./PostData/Seed1Refi2/Seed1Refi2"
+output="Seed1Refi2"
+# Extract post-processing data rows and time, write to .dat file
+grep -B1 "Post-process" $simRunList.log| cut -d' ' -f2,6,7 > volAvgU_NP$output.dat
+#cat Practice | grep "Foo" -B1 | cut -d' ' -f1- > OutPractice.dat

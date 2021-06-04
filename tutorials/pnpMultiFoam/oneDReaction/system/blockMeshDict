@@ -1,0 +1,115 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+convertToMeters 1;
+
+// Start x point
+xStart -1.0;
+
+// Length of solid region (x-dir)
+lSolid 1.0;//1.0;
+
+// Length of fluid region (x-dir)
+lFluid 1.0;//1.0;
+
+// Height (y-dir) of regions (not important since 1D)
+height 0.1;
+
+// Width (z-dir) of regions (not important since 1D)
+width 0.1;
+
+// Total region length (x-dir)
+totLength #calc "$xStart + $lSolid + $lFluid";
+
+// End x point of fluid
+endFluid #calc "$xStart + $lFluid";
+
+// # of cells in x-dir (fluid region)
+nCellsFluid 50;//4800;
+
+// Expansion ratio in x-dir (fluid region)
+expRatioFluid 0.5;
+
+// # of cells in x-dir (solid region)
+nCellsSolid 50;//3200;
+
+// Expansion ratio in x-dir (solid region)
+expRatioSolid 2;
+
+
+vertices
+(
+	// Front face of fluid (verts 0-3)
+	($xStart 0 0)
+	($endFluid 0 0)
+	($endFluid $height 0)
+	($xStart $height 0)
+
+	// Back face of fluid (verts 4-7)
+	($xStart 0 $width)
+	($endFluid 0 $width)
+	($endFluid $height $width)
+	($xStart $height $width)
+
+	// End face of solid (verts 8-11)
+	($totLength 0 $width)
+	($totLength $height $width)
+	($totLength $height 0)
+	($totLength 0 0)
+
+
+);
+
+blocks 
+(
+	hex (0 1 2 3 4 5 6 7) fluid ($nCellsFluid 1 1) simpleGrading ($expRatioFluid 1 1) // Fluid region
+	hex (1 11 10 2 5 8 9 6) solid ($nCellsSolid 1 1) simpleGrading ($expRatioSolid 1 1) // Solid region
+);
+
+boundary
+(
+	emptyFaces
+	{
+		type empty;
+		faces
+		(
+			(4 5 6 7)
+			(0 1 2 3)
+			(5 8 9 6)
+			(1 11 10 2)
+			(0 4 5 1)
+			(7 6 2 3)
+			(5 8 11 1)
+			(6 9 10 2)
+		);
+	}
+
+	fluidOuterWall
+	{
+		type wall; // MAYBE CHANGE TO generic patch TO ALLOW INLET/OUTLET CONDITIONS?
+		faces
+		(
+			(0 4 7 3)
+		);
+	}
+	solidOuterWall
+	{
+		type wall;
+		faces
+		(
+			(8 9 10 11)
+		);
+	}
+);

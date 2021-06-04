@@ -1,0 +1,84 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setRandomFieldDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// -- Name of the field
+// -- this is read and then use as a (multiplicative) basis
+field r;
+
+// -- Type of random field
+// type gaussian;
+// type logNormal;
+type truncated;
+// type bitruncated;
+// type uniform;
+
+// -- Seed number (remove if random seed desired)
+seed 834273346;//Seed 1 == 1450676319, Seed 2 == 834273346;
+
+// -- Correlation function
+// correlation exponential;
+correlation gaussian;
+// correlation matern;
+
+// -- Correlation lengths
+Lcorr           (5e-5 5e-5 5e-5);
+
+// -- Correlation tolerance (skip high frequencies)
+corrTol         1e-8;
+
+// -- Matern coefficient
+nu              1;
+
+// -- Disable dimensions
+disableY true;
+disableZ false;
+
+// -- Periodic field
+periodic true;
+
+// -- Initialisation
+reset true; // discard current value
+additive false; // sum (or multiply) existing value
+
+// -- Mean and variance of the final field (or the underlying Gaussian)
+setFinalStats  false;
+
+// -- Mean and variance
+mu             0;
+sigma          1;
+
+// -- Number of terms in the expansion
+nterms 1;
+
+// -- Number of frequencies in the expansion
+nfreq 30;
+// nfreqy 20;
+// nfreqz 20;
+
+// -- Maximum length as a multiple of Lcorr  (not used for periodic)
+maxLength (10 10 10);
+
+// -- Print basic output stats
+printStats true;
+printLogStats true;
+
+
+// -- For truncated fields
+values (0 1);
+thresholds (-.5);//(-.3); // it controls porosity
+
+// -- For bitruncated fields
+thresholds2 (0);

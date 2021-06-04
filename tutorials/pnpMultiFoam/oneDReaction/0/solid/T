@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/initialConditions";
+
+#include "$FOAM_CASE/constant/D";
+
+dimensions      [ 0 0 0 1 0 0 0 ];
+
+internalField   uniform $Tsolid;
+
+boundaryField
+{
+    solidOuterWall
+    {
+        type fixedValue;//noFlux;//zeroGradient;
+        value uniform 0;//$internalField;
+    }
+
+    solid_to_fluid
+    {
+        type            mappedChemicalKineticsSolid;
+        Dfluid          uniform $Dfluid;
+        RobinD          uniform $Dsolid;
+        value           $internalField;
+        field           "T";
+        localPhi        "phi";
+        mappedPhi       "phi";
+
+        reaction 
+        {
+            type            linear;
+            forward_rate    2;
+            backward_rate   1;
+        }
+    }
+}
+
+// ************************************************************************* //

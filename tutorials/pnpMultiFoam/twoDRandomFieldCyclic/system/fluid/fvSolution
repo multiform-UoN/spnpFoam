@@ -1,0 +1,116 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system/fluid";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    V
+    {
+        solver          PBiCGStab;
+        preconditioner  FDIC;
+        smoother        FDIC;
+        tolerance       1e-8;//1e-12;
+        relTol          1e-3;
+    }
+
+    U
+    {
+        solver          PCG;
+        preconditioner  FDIC;
+        smoother        FDIC;
+        tolerance       1e-8;//1e-12;
+        relTol          1e-3;
+    }
+
+    p
+    {
+        solver          PBiCGStab;//GAMG;
+        smoother        GaussSeidel;//FDIC;
+        preconditioner  FDIC;
+        tolerance       1e-8;
+        relTol          1e-1;
+    }
+
+    VFinal
+    {
+        $V;
+        relTol          1e-3;
+    }
+    UFinal
+    {
+        $U
+        relTol          1e-3;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
+    }
+
+
+    "C.*"
+    {
+        solver          PBiCGStab;
+        preconditioner  DILU;
+        smoother        DILU;
+        tolerance       1e-8;//1e-15;
+        relTol          1e-3;
+    }
+}
+
+PIMPLE
+{
+    outerCorrectorResidualControl //residualControl
+    {
+        ".*"
+        {
+            tolerance 1e-5;//1e-6;
+            relTol    1e-3;
+        }
+
+    }
+    residualControl
+    {
+        ".*"   1e-7;//1e-12
+    }
+
+    // nOuterCorrectors 1;
+    nCorrectors     5;//20;
+    nNonOrthogonalCorrectors 0;
+    pRefCell        0;
+    pRefValue       0;
+    consistent          yes;
+    momentumPredictor   yes;
+    faceMomentum        yes;
+}
+
+relaxationFactors
+{
+    fields
+    {
+        p 1;
+    }
+
+    equations
+    {
+        U 0.9;
+        p 1;
+        ".*" 1;
+    }
+}
+
+// ************************************************************************* //
