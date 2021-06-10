@@ -22,6 +22,7 @@ List<scalar> pRefValueFluid(fluidRegions.size());
 
 // Pointer list towards each fluid regions concentration pointer list
 PtrList<PtrList<volScalarField>> cPtrLFluid(fluidRegions.size());
+PtrList<PtrList<surfaceScalarField>> phiPtrLFluid(fluidRegions.size());
 
 // Pointer list of species dictionary list for fluid regions
 PtrList<PtrList<dictionary>> speciesFluid(fluidRegions.size());
@@ -32,11 +33,21 @@ PtrList<List<scalar>> speciesCoNumFluid(fluidRegions.size());
 // Pointer list of mean species Co # for fluid regions
 PtrList<List<scalar>> speciesMeanCoNumFluid(fluidRegions.size());
 
+// Pointer list of total mass
+PtrList<List<scalar>> speciesTotConcFluid(fluidRegions.size());
+// Volumes
+List<scalar> volFluid(fluidRegions.size(),0.0);
+
 // List a Max Co # of all species for fluid regions (initialize all to 0)
 List<scalar> MaxCoFluid(fluidRegions.size(),0.0);
 
 // Populate fluid field pointer lists
 forAll(fluidRegions, i){
+
+    // Compute volumes
+    volFluid[i] = Foam::gSum(fluidRegions[i].V());
+    Info<< "Fluid region " << fluidRegions[i].name()
+          << " Volume " << volFluid[i] << endl;
 
     //Look up species from dictionary of fluid region i
     PtrList<entry> specEntries(
@@ -51,6 +62,11 @@ forAll(fluidRegions, i){
     cPtrLFluid.set(
         i,
         new PtrList<volScalarField>(specEntries.size())
+    );
+
+    phiPtrLFluid.set(
+        i,
+        new PtrList<surfaceScalarField>(specEntries.size())
     );
 
     speciesFluid.set(
@@ -107,7 +123,8 @@ forAll(fluidRegions, i){
         VFluid[i],
         fluidRegions[i].solutionDict().subDict("PIMPLE"),
         VRefCellFluid[i],
-        VRefValueFluid[i]
+        VRefValueFluid[i],
+        fluidRegions[i].solutionDict().subDict("PIMPLE").lookupOrDefault<bool>("forceVRef",false)
     );
 
     setRefCell(
@@ -194,24 +211,6 @@ forAll(fluidRegions, i){
         )
     );
 
-    //phiNPFluid := Nernst-Planck fluid face flux field
-    Info<<"     Adding to phiNPFluid\n"<< endl;
-    phiNPFluid.set(
-        i,
-        new surfaceScalarField
-        (
-            IOobject
-            (
-                "phiNP",
-                runTime.timeName(),
-                fluidRegions[i],
-                IOobject::READ_IF_PRESENT,
-                IOobject::AUTO_WRITE
-            ),
-            phiFluid[i]*scalar(0.0)//phiFluid[i] - fvc::flux(e_*fvc::grad(VFluid[i])/(k_*TFluid[i]))
-        )
-    );
-
     Info<<"     Adding to species list\n"<< endl;
     //- Set all species objects in list
     for(int sp=0; sp<specEntries.size(); sp++)
@@ -234,6 +233,22 @@ forAll(fluidRegions, i){
 
         );
 
+        phiPtrLFluid[i].set(
+            sp,
+            new surfaceScalarField
+            (
+                IOobject
+                (
+                    "phi"+specEntries[sp].keyword(),
+                    runTime.timeName(),
+                    fluidRegions[i],
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::AUTO_WRITE
+                ),
+                phiFluid[i]
+            )
+        );
+
         speciesFluid[i].set(sp,new dictionary(specEntries[sp].dict()));
 
     }
@@ -245,6 +260,11 @@ forAll(fluidRegions, i){
         );
 
     speciesMeanCoNumFluid.set(
+        i,
+        new List<scalar>(specEntries.size(),0.0)
+        );
+
+    speciesTotConcFluid.set(
         i,
         new List<scalar>(specEntries.size(),0.0)
         );

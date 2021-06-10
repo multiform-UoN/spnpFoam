@@ -26,13 +26,22 @@ PtrList<List<scalar>> speciesMeanDiffNumSolid(solidRegions.size());
 // List a Max Co # of all species for solid regions (initialize all to 0)
 List<scalar> MaxDiffSolid(solidRegions.size(),0.0);
 
+// Pointer list of total mass
+PtrList<List<scalar>> speciesTotConcSolid(solidRegions.size());
+// Volumes
+List<scalar> volSolid(solidRegions.size(),0.0);
+
 
 // Populate solid field pointer lists
 forAll(solidRegions, i){
 
+    // Compute volumes
+    volSolid[i] = Foam::gSum(solidRegions[i].V());
+    Info<< "Solid region " << solidRegions[i].name()
+          << " Volume " << volSolid[i] << endl;
+
     //Look up species from dictionary of solid region i
     PtrList<entry> specEntries(
-
             SolidElectroKineticProperties[i].lookup("species")
     );
 
@@ -79,7 +88,8 @@ forAll(solidRegions, i){
         VSolid[i],
         solidRegions[i].solutionDict().subDict("PIMPLE"),
         VRefCellSolid[i],
-        VRefValueSolid[i]
+        VRefValueSolid[i],
+        solidRegions[i].solutionDict().subDict("PIMPLE").lookupOrDefault<bool>("forceVRef",false)
     );
 
     //TSolid := solid temperature field
@@ -159,5 +169,11 @@ forAll(solidRegions, i){
         i,
         new List<scalar>(specEntries.size(),0.0)
         );
+
+    speciesTotConcSolid.set(
+        i,
+        new List<scalar>(specEntries.size(),0.0)
+        );
+
 
 }

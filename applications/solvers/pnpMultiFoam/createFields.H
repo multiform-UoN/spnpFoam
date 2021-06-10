@@ -13,11 +13,9 @@ PtrList<dimensionedScalar> epsilonR_Fluid(fluidRegions.size());
 PtrList<dimensionedScalar> epsilon_Fluid(fluidRegions.size());
 PtrList<dimensionedScalar> mu_Fluid(fluidRegions.size());
 
+
 // Run through all solid regions
 forAll(solidRegions, i){
-
-	// Construct word for filename of region i
-	word ElectroKinPropSolFile("electrokineticProperties" + solidsNames[i]);
 
 	// Set ith electrokineticProperties to dictionary of file
 	SolidElectroKineticProperties.set(
@@ -27,7 +25,7 @@ forAll(solidRegions, i){
 
 			IOobject(
 
-				ElectroKinPropSolFile,
+				"electrokineticProperties",
 				runTime.constant(),
 				solidRegions[i],
 				IOobject::MUST_READ_IF_MODIFIED,
@@ -45,8 +43,6 @@ epsilon_Solid.set(i,new dimensionedScalar(epsilonR_Solid[i] * epsilonZero_));
 
 forAll(fluidRegions, i){
 
-	word ElectroKinPropFluFile("electrokineticProperties" + fluidNames[i]);
-
 	FluidElectroKineticProperties.set(
 
 		i,
@@ -54,7 +50,7 @@ forAll(fluidRegions, i){
 
 			IOobject(
 
-				ElectroKinPropFluFile,
+				"electrokineticProperties",
 				runTime.constant(),
 				fluidRegions[i],
 				IOobject::MUST_READ_IF_MODIFIED,

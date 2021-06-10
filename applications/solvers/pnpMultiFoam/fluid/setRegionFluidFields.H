@@ -4,7 +4,6 @@ fvMesh& mesh(fluidRegions[i]);
 //Set current fields to fluid region i
 volScalarField& V(VFluid[i]);
 volScalarField& T(TFluid[i]);
-surfaceScalarField& phiNP(phiNPFluid[i]);
 volVectorField& U(UFluid[i]);
 volScalarField& rho(rhoFluid[i]);
 volScalarField& p(pFluid[i]);
@@ -12,6 +11,7 @@ surfaceScalarField& phi(phiFluid[i]);
 
 // Set current concentrations to fluid region i
 PtrList<volScalarField>& cPtrL(cPtrLFluid[i]);
+PtrList<surfaceScalarField>& phiPtrL(phiPtrLFluid[i]);
 
 // Set species dictionary to fluid region i
 PtrList<dictionary>& species(speciesFluid[i]);
@@ -28,6 +28,11 @@ const bool&	electroNeutrality(electroNeutralityFluid[i]);
 // Set reference cell and value to fluid region i
 const label& VRefCell(VRefCellFluid[i]);
 const scalar& VRefValue(VRefValueFluid[i]);
+const bool forceRef
+(
+    fluidRegions[i].solutionDict().subDict("PIMPLE").
+    lookupOrDefault<bool>("forceVRef",false)
+);
 const label& pRefCell(pRefCellFluid[i]);
 const scalar& pRefValue(pRefValueFluid[i]);
 
@@ -42,3 +47,6 @@ List<scalar>& spMeanCoNum(speciesMeanCoNumFluid[i]);
 
 // Find # of loop controls set for fluid region i
 pimpleNoLoopControl& pimple(pimples.pimple(i));
+
+// Choose the algorithm for computing the body forces
+Switch faceMomentum(pimple.dict().lookupOrDefault("faceMomentum",false));

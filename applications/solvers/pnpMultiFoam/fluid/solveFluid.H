@@ -1,5 +1,4 @@
 {
-
   //-Update charge density
   rho *= scalar(0); //- Simply reset to zero
 
@@ -17,14 +16,27 @@
   if(!pimple.frozenFlow())
   {
     // Solve Stokes
-    #include "UEqn.H"
-
-    // Solve pressure correction
-    while(pimple.correct())
+    if(faceMomentum)
     {
-      #include "pEqn.H"
+        #include "UEqnf.H"
+
+        // Solve pressure correction
+        while(pimple.correct())
+        {
+          #include "pEqnf.H"
+        }
+
     }
-    #include "continuityErrs.H"
+    else
+    {
+        #include "UEqn.H"
+
+        // Solve pressure correction
+        while(pimple.correct())
+        {
+          #include "pEqn.H"
+        }
+    }
   }
 
   //- Solve Poisson
@@ -38,7 +50,7 @@
     );
 
     // Set the reference value for V to RefCell & RefValue, do nothing if not
-    VEqn.setReference(VRefCell, VRefValue);
+    VEqn.setReference(VRefCell, VRefValue, forceRef);
 
     VEqn.relax();
     VEqn.solve();
@@ -51,11 +63,12 @@
 
     //- Collect pointers and coefficients
     volScalarField&   C(cPtrL[sp]);
+    surfaceScalarField& phiNP(phiPtrL[sp]);
     dimensionedScalar D(species[sp].lookup("D"));
     dimensionedScalar Z(species[sp].lookup("Z"));
 
     //- Update Nerst-Planck flux to specific concentration
-    phiNP = phi - fvc::flux(e_*fvc::grad(V)/(k_*T))*D*Z;
+    phiNP = phi - e_*fvc::snGrad(V)*mesh.magSf()/(k_*fvc::interpolate(T))*D*Z;
 
     //Check if electro-neutrality is wanted
     if (electroNeutrality && sp == species.size()-1)
@@ -104,5 +117,10 @@
 
       }
     }
+
+    // Update tot mass
+    speciesTotConcFluid[i][sp] =
+        Foam::gSum(cPtrLFluid[i][sp]().field()*fluidRegions[i].V());
+
   }
 }

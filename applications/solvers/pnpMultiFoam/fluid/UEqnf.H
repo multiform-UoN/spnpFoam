@@ -3,7 +3,10 @@ tmp<fvVectorMatrix> tUEqn
 (
     //Stokes flow approximation
     - fvm::laplacian(mu,U)
-    + rho*fvc::grad(V)
+    + fvc::reconstruct
+      (
+         fvc::interpolate(rho)*fvc::snGrad(V)*mesh.magSf()
+      )
     ==
     unitDensity*fvOptions(U)
 );
@@ -16,6 +19,10 @@ fvOptions.constrain(UEqn);
 if (pimple.momentumPredictor())
 {
     //Solve momentum predictor
-    solve(UEqn == -fvc::grad(p));
+    solve
+    (
+        UEqn + fvc::reconstruct(fvc::snGrad(p)*mesh.magSf())
+    );
+
     fvOptions.correct(U);
 }

@@ -1,11 +1,4 @@
 {
-  // label pnpiter=1;
-  // // --- Coupling loop
-  // while (pimple.correct())
-  {
-    // Info << "Solid PNP iteration " << pnpiter << endl;
-    // pnpiter++;
-
     //-Update charge density
     rho *= scalar(0); //- Simply reset to zero
 
@@ -29,7 +22,7 @@
       );
 
       // Set the reference value for V to RefCell & RefValue, do nothing if not
-      VEqn.setReference(VRefCell, VRefValue);
+      VEqn.setReference(VRefCell, VRefValue, forceRef);
 
       VEqn.relax();
       VEqn.solve();
@@ -98,7 +91,10 @@
           // }
         }
       }
-    }
-  }
 
+      // Update tot mass
+      speciesTotConcSolid[i][sp] =
+        Foam::gSum(cPtrLSolid[i][sp]().field()*solidRegions[i].V());
+
+    }
 }

@@ -20,6 +20,7 @@ const bool&	electroNeutrality = electroNeutralitySolid[i];
 //Set reference cell and value to fluid region i
 const label& VRefCell = VRefCellSolid[i];
 const scalar& VRefValue = VRefValueSolid[i];
+const bool forceRef = solidRegions[i].solutionDict().subDict("PIMPLE").lookupOrDefault<bool>("forceVRef",false);
 
 // Set list of Max Co #'s for each species to fluid region i
 List<scalar>& spDiffNum(speciesDiffNumSolid[i]);

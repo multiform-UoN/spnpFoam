@@ -11,6 +11,7 @@ forAll(fluidRegions,i){
 
 		// Gather pointers to specific ion species sp
 		volScalarField&   C(cPtrL[sp]);
+	    surfaceScalarField& phiNP(phiPtrL[sp]);
 		dimensionedScalar D(species[sp].lookup("D"));
 		dimensionedScalar Z(species[sp].lookup("Z"));
 
