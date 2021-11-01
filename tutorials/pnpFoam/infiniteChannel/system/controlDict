@@ -14,7 +14,7 @@ FoamFile
     object      controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-libs            ("libelectrokineticFoam.so");
+libs            ("libspnpFoam.so");
 
 application     pnpFoam;
 
