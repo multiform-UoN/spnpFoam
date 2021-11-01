@@ -15,7 +15,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 libs
 (
- 	"libelectrokineticFoam.so"
+ 	"libspnpFoam.so"
  	"libmultiformFoam.so"
 );
 
